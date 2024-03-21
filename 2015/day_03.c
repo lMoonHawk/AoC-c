@@ -8,11 +8,9 @@ typedef struct {
 } Vec2;
 
 int main() {
-    FILE* input = fopen("data/day_03.txt", "r");
+    FILE* input = fopen("2015/data/day_03.txt", "r");
+    
     char c;
-    int x, y;
-
-
     Vec2 pos_alone = {};
     Vec2 pos_arr_alone[POS_SIZE];
 

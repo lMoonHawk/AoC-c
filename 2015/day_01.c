@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 int main() {
-    FILE* input = fopen("data/day_01.txt", "r");
+    FILE* input = fopen("2015/data/day_01.txt", "r");
     char c;
     int floor = 0;
     int position = 0;
@@ -9,7 +9,7 @@ int main() {
     while ((c = fgetc(input)) != EOF) {
         position++;
         floor += (c == '(') ? 1 : -1;
-        if (floor == -1 & basement == 0) basement = position;
+        if (floor == -1 && basement == 0) basement = position;
     }
     fclose(input);
     printf("Part 1: %i\n", floor);

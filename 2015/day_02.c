@@ -13,7 +13,7 @@ int swapi(int i1, int i2, int *arr, size_t size) {
 }
 
 int main() {
-    FILE* input = fopen("data/day_02.txt", "r");
+    FILE* input = fopen("2015/data/day_02.txt", "r");
     int paper = 0;
     int ribbon = 0;
     char buffer[10];
