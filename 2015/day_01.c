@@ -1,11 +1,11 @@
 #include <stdio.h>
 
 int main() {
-    FILE* input = fopen("2015/data/day_01.txt", "r");
+    FILE* input = fopen("data/day_01.txt", "r");
     char c;
     int floor = 0;
     int position = 0;
-    int basement;
+    int basement = 0;
     while ((c = fgetc(input)) != EOF) {
         position++;
         floor += (c == '(') ? 1 : -1;

@@ -5,7 +5,7 @@
 
 int main() {
     char prefix[16];
-    FILE* input = fopen("2015/data/day_04.txt", "r");
+    FILE* input = fopen("data/day_04.txt", "r");
     fgets(prefix, sizeof(prefix), input);
     fclose(input);
     prefix[strcspn(prefix, "\n")] = 0;

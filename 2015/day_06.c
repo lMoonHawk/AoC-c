@@ -48,15 +48,15 @@ size_t switch_p2(const char* op, short grid[][GRID_SIZE], int start_x, int start
 
 int main() {
     char buffer[100];
-    FILE* input = fopen("2015/data/day_06.txt", "r");
+    FILE* input = fopen("data/day_06.txt", "r");
     short(*grid_p1)[GRID_SIZE] = calloc(sizeof(*grid_p1), GRID_SIZE);
     short(*grid_p2)[GRID_SIZE] = calloc(sizeof(*grid_p2), GRID_SIZE);
     size_t brightness_p1=0;
     size_t brightness_p2=0;
 
+    char* op;
+    int start_x, start_y, end_x, end_y;
     while (fgets(buffer, sizeof(buffer), input) != NULL) {
-        char* op;
-        int start_x, start_y, end_x, end_y;
 
         op = strtok(buffer, " ");
         if (strcmp(op, "turn") == 0) op = strtok(NULL, " ");

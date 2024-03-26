@@ -42,7 +42,7 @@ int main() {
     char buffer[20];
     int nice_cnt_1 = 0;
     int nice_cnt_2 = 0;
-    FILE* input = fopen("2015/data/day_05.txt", "r");
+    FILE* input = fopen("data/day_05.txt", "r");
 
     while (fgets(buffer, sizeof(buffer), input) != NULL) {
         buffer[strcspn(buffer, "\n")] = 0;
