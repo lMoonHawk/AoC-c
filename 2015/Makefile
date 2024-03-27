@@ -18,5 +18,5 @@ md5.o: md5.c
 	$(CC) $(CFLAGS) md5.c -c
 
 clean:
-	$(RM) *.exe *.o
+	$(RM) /Q bin *.o
 .PHONY: clean
