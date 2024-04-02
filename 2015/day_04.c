@@ -1,6 +1,7 @@
 #include <stdio.h>
-#include "md5.h"
-// https://github.com/Zunawe/md5-c?tab=readme-ov-file
+
+#define MD5_IMPLEMENTATION
+#include "../common/md5.h"
 
 
 int main() {

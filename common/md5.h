@@ -1,13 +1,33 @@
-/*
- * Derived from the RSA Data Security, Inc. MD5 Message-Digest Algorithm
- * and modified slightly to be functionally identical but condensed into control structures.
- */
+// CREDIT: https://github.com/Zunawe/md5-c?tab=readme-ov-file
+#ifndef MD5_H
+#define MD5_H
 
-#include "md5.h"
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+#include <stdlib.h>
 
-/*
- * Constants defined by the MD5 algorithm
- */
+typedef struct{
+    uint64_t size;        // Size of input in bytes
+    uint32_t buffer[4];   // Current accumulation of hash
+    uint8_t input[64];    // Input to be used in the next step
+    uint8_t digest[16];   // Result of algorithm
+}MD5Context;
+
+void md5Init(MD5Context *ctx);
+void md5Update(MD5Context *ctx, uint8_t *input, size_t input_len);
+void md5Finalize(MD5Context *ctx);
+void md5Step(uint32_t *buffer, uint32_t *input);
+
+void md5String(char *input, uint8_t *result);
+void md5File(FILE *file, uint8_t *result);
+
+#endif // MD5_H
+
+
+#ifdef MD5_IMPLEMENTATION
+
+// Constants defined by the MD5 algorithm
 #define A 0x67452301
 #define B 0xefcdab89
 #define C 0x98badcfe
@@ -35,9 +55,9 @@ static uint32_t K[] = {0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee,
                        0x6fa87e4f, 0xfe2ce6e0, 0xa3014314, 0x4e0811a1,
                        0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391};
 
-/*
- * Padding used to make the size (in bits) of the input congruent to 448 mod 512
- */
+
+// Padding used to make the size (in bits) of the input congruent to 448 mod 512
+
 static uint8_t PADDING[] = {0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -47,25 +67,18 @@ static uint8_t PADDING[] = {0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-/*
- * Bit-manipulation functions defined by the MD5 algorithm
- */
+// Bit-manipulation functions defined by the MD5 algorithm
 #define F(X, Y, Z) ((X & Y) | (~X & Z))
 #define G(X, Y, Z) ((X & Z) | (Y & ~Z))
 #define H(X, Y, Z) (X ^ Y ^ Z)
 #define I(X, Y, Z) (Y ^ (X | ~Z))
 
-/*
- * Rotates a 32-bit word left by n bits
- */
+// Rotates a 32-bit word left by n bits
 uint32_t rotateLeft(uint32_t x, uint32_t n){
     return (x << n) | (x >> (32 - n));
 }
 
-
-/*
- * Initialize a context
- */
+// Initialize a context
 void md5Init(MD5Context *ctx){
     ctx->size = (uint64_t)0;
 
@@ -75,12 +88,9 @@ void md5Init(MD5Context *ctx){
     ctx->buffer[3] = (uint32_t)D;
 }
 
-/*
- * Add some amount of input to the context
- *
- * If the input fills out a block of 512 bits, apply the algorithm (md5Step)
- * and save the result in the buffer. Also updates the overall size.
- */
+// Add some amount of input to the context
+// If the input fills out a block of 512 bits, apply the algorithm (md5Step)
+// and save the result in the buffer. Also updates the overall size.
 void md5Update(MD5Context *ctx, uint8_t *input_buffer, size_t input_len){
     uint32_t input[16];
     unsigned int offset = ctx->size % 64;
@@ -110,10 +120,8 @@ void md5Update(MD5Context *ctx, uint8_t *input_buffer, size_t input_len){
     }
 }
 
-/*
- * Pad the current input to get to 448 bytes, append the size in bits to the very end,
- * and save the result of the final iteration into digest.
- */
+// Pad the current input to get to 448 bytes, append the size in bits to the very end,
+// and save the result of the final iteration into digest.
 void md5Finalize(MD5Context *ctx){
     uint32_t input[16];
     unsigned int offset = ctx->size % 64;
@@ -145,9 +153,7 @@ void md5Finalize(MD5Context *ctx){
     }
 }
 
-/*
- * Step on 512 bits of input with the main MD5 algorithm.
- */
+// Step on 512 bits of input with the main MD5 algorithm.
 void md5Step(uint32_t *buffer, uint32_t *input){
     uint32_t AA = buffer[0];
     uint32_t BB = buffer[1];
@@ -191,10 +197,8 @@ void md5Step(uint32_t *buffer, uint32_t *input){
     buffer[3] += DD;
 }
 
-/*
- * Functions that run the algorithm on the provided input and put the digest into result.
- * result should be able to store 16 bytes.
- */
+// Functions that run the algorithm on the provided input and put the digest into result.
+// result should be able to store 16 bytes.
 void md5String(char *input, uint8_t *result){
     MD5Context ctx;
     md5Init(&ctx);
@@ -221,3 +225,6 @@ void md5File(FILE *file, uint8_t *result){
 
     memcpy(result, ctx.digest, 16);
 }
+
+
+#endif // MD5_IMPLEMENTATION
