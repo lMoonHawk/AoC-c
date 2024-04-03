@@ -12,6 +12,7 @@ typedef Node* Stack;
 
 void stack_push(Stack* stack, void* in);
 void* stack_pop(Stack* stack);
+void* stack_peek(Stack* stack);
 
 #endif // STACK_H
 
@@ -36,6 +37,11 @@ void* stack_pop(Stack* stack) {
     free(del_node);
 
     return popped_val;
+}
+
+void* stack_peek(Stack* stack) {
+    assert(*stack != NULL);
+    return (*stack)->value;
 }
 
 #endif // STACK_IMPLEMENTATION
