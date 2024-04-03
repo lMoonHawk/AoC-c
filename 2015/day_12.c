@@ -9,8 +9,6 @@
 #include "../common/stack.h"
 
 #define BUFFER_MAX 16
-// TODO: Use dynamic array or maybe another stack
-#define ELEMENTS_MAX 2048
 
 const char banned[] = "red";
 
@@ -20,13 +18,6 @@ typedef struct {
     int32_t sum;
     int ignored;
 } Element;
-
-void add_char(char c, char* str, size_t size) {
-    size_t len = strlen(str);
-    assert(len < size);
-    str[len] = c;
-    str[len + 1] = '\0';
-}
 
 // Parses number (increments file pointer)
 int parse_num(FILE* f, size_t max_len) {
@@ -61,9 +52,8 @@ char* parse_str(FILE* f, size_t max_len) {
 int main() {
     FILE* input = fopen("data/day_12.txt", "r");
 
-    Stack stack = NULL;
-    Element* popped_arr[ELEMENTS_MAX];
-    size_t popped_cnt = 0;
+    Stack in_stack = NULL;
+    Stack out_stack = NULL;
 
     char c;
     uint32_t depth = 0;
@@ -72,24 +62,25 @@ int main() {
         // Found a number
         if (c == '-' || isdigit(c)) {
             ungetc(c, input);
-            Element* top = stack_peek(&stack);
+            Element* top = stack_peek(&in_stack);
             int test = parse_num(input, BUFFER_MAX);
             top->sum += test;
-            assert(top->sum < 4294967290);
 
         }
         // Found a string
         else if (c == '"') {
             char* str = parse_str(input, BUFFER_MAX);
             if (strcmp(banned, str) == 0) {
-                Element* top = stack_peek(&stack);
+                Element* top = stack_peek(&in_stack);
                 if (top->paren == '{') {
                     top->ignored = 1;
 
-                    for (ssize_t i = popped_cnt - 1; i >= 0; i--) {
-                        Element* node = popped_arr[i];
+                    Node* item = out_stack;
+                    while (item) {
+                        Element* node = item->value;
                         if (node->depth <= top->depth) break;
                         node->ignored = 1;
+                        item = item->next;
                     }
                 }
             }
@@ -100,31 +91,30 @@ int main() {
             Element* tmp = calloc(1, sizeof(Element));
 
             int ignore = 0;
-            if (stack != NULL) {
-                Element* top = stack_peek(&stack);
-                ignore = (top->ignored && top->depth < depth); 
+            if (in_stack != NULL) {
+                Element* top = stack_peek(&in_stack);
+                ignore = (top->ignored && top->depth < depth);
             }
             *tmp = (Element){ .paren = c, .depth = depth, .ignored = ignore };
-            stack_push(&stack, tmp);
+            stack_push(&in_stack, tmp);
             depth++;
         }
         else if (c == ']' || c == '}') {
-            popped_arr[popped_cnt++] = stack_pop(&stack);
+            stack_push(&out_stack, stack_pop(&in_stack));
             depth--;
         }
     }
 
-    assert(stack == NULL);
+    assert(in_stack == NULL);
     int32_t total = 0;
     int32_t total_wo_banned = 0;
-    int32_t amt;
 
-    for (size_t i = 0; i < popped_cnt; i++) {
-        amt = popped_arr[i]->sum;
-        
-        total += amt;
-        if (!popped_arr[i]->ignored) total_wo_banned += amt;
-        free(popped_arr[i]);
+    while (out_stack != NULL) {
+        Element* node = stack_pop(&out_stack);
+
+        total += node->sum;
+        if (!node->ignored) total_wo_banned += node->sum;
+        free(node);
     }
     printf("Part 1: %d\n", total);
     printf("Part 2: %d", total_wo_banned);
