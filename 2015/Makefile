@@ -12,5 +12,5 @@ BIN = bin
 	$(CC) $(CFLAGS) $^ -o $(BIN)/$@ && $(BIN)\$@
 
 clean:
-	$(RM) /Q bin
+	@$(RM) /Q bin
 .PHONY: clean
