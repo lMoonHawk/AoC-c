@@ -124,4 +124,7 @@ int main() {
     printf("Part 1: %d\n", max);
     printf("Part 2: %d\n", max2);
 
+    da_free(names);
+    da_free(rships);
+    fclose(input);
 }

@@ -73,7 +73,6 @@ int main() {
     printf("Part 1: %lu\n", max_dist);
     printf("Part 2: %lu", max_points);
 
-
+    da_free(reindeers);
     fclose(input);
-
 }
