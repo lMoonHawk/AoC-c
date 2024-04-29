@@ -1,7 +1,6 @@
 #include <stdio.h>
-
-#define DARRAY_IMPLEMENTATION
-#include "../common/darray.h"
+#include <string.h>
+#include <stdlib.h>
 
 #define LINE_MAX 256
 
