@@ -4,15 +4,12 @@ To use this library, do this in *one* C or C++ file:
 #include "darray.h"
 
 T* da = da_create(sizeof(T)) - Create a dynamic array
-da_free(da)                  - Free the entire dynamic array 
+da_free(da)                  - Free the entire dynamic array
 da_append(da, var)           - Append var to the dynamic array da
 da_pop(da, &var)             - Remove last element of dynamic array da and copies result to var (can be NULL)
 da_remove(da, i)             - Remove element i from dynamic array da
-da_length(da)                - Get length of dynamic array da 
-da[i]                            - Access ith element of dynamic array da
-
-TODO:
-Dynamic array should shrink if length < capacity/2
+da_length(da)                - Get length of dynamic array da
+da[i]                        - Access ith element of dynamic array da
 */
 
 #ifndef DARRAY_H
@@ -23,7 +20,6 @@ Dynamic array should shrink if length < capacity/2
 #define DARRAY_GROWTH 1.5
 #define DARRAY_INICAP 2
 
-
 enum DARRAY_HEADER {
     DARRAY_LENGTH,
     DARRAY_CAPACITY,
@@ -33,7 +29,7 @@ enum DARRAY_HEADER {
 
 #define da_append(da, val) _da_append((void**)&(da), &(val));
 
-void print_err(const char* msg);
+void da_print_err(const char* msg);
 void* da_create(size_t unit_size);
 size_t da_length(void* da);
 size_t da_capacity(void* da);
@@ -52,7 +48,7 @@ void da_free(void* da);
 #include <string.h>
 #include <assert.h>
 
-void print_err(const char* msg) {
+void da_print_err(const char* msg) {
     fprintf(stderr, "%s %s", "[DARRAY ERR]", msg);
 }
 
@@ -82,22 +78,19 @@ void da_set_length(void* da, size_t len) {
     *((size_t*)da - DARRAY_FIELDS + DARRAY_LENGTH) = len;
 }
 
+void _da_resize(void** da, size_t capa, size_t size) {
+    size_t* dah = (size_t*)realloc((size_t*)*da - DARRAY_FIELDS, DARRAY_FIELDS * sizeof(size_t) + capa * size);
+    assert(dah != NULL);
+    dah[DARRAY_CAPACITY] = capa;
+    *da = (void*)(dah + DARRAY_FIELDS);
+}
+
 void _da_append(void** da, void* value) {
     size_t len = da_length(*da);
     size_t capa = da_capacity(*da);
     size_t size = da_unit_size(*da);
-    if (capa <= len) {
-        capa *= DARRAY_GROWTH;
-        size_t* dah = (size_t*)realloc((size_t*)*da - DARRAY_FIELDS, DARRAY_FIELDS * sizeof(size_t) + capa * size);
-        assert(dah != NULL);
-        // Set the header
-        dah[DARRAY_LENGTH] = len;
-        dah[DARRAY_CAPACITY] = capa;
-        dah[DARRAY_UNIT_SIZE] = size;
-        // Update the original array
-        *da = (void*)(dah + DARRAY_FIELDS);
-    }
-    // Append the value
+    if (capa <= len) _da_resize(da, capa * DARRAY_GROWTH, size);
+
     memcpy((char*)*da + len * size, value, size);
     da_set_length(*da, ++len);
 }
@@ -105,12 +98,15 @@ void _da_append(void** da, void* value) {
 void da_pop(void* da, void* result) {
     size_t len = da_length(da);
     if (len <= 0) {
-        print_err("Pop from an empty array\n");
+        da_print_err("Pop from an empty array\n");
     }
     else {
+        // size_t capa = da_capacity(da);
         size_t size = da_unit_size(da);
-        char* last_element = (char*)da + (len - 1) * size;
-        if (result != NULL) memcpy(result, last_element, size);
+        // TODO: research optimal shrink threshold & factor and/or allow for custom setting
+        // if (len * DARRAY_SHRINK <= capa) _da_resize(&da, capa / DARRAY_GROWTH, size);
+        char* last_p = (char*)da + (len - 1) * size;
+        if (result != NULL) memcpy(result, last_p, size);
         da_set_length(da, --len);
     }
 }
