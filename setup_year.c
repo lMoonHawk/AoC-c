@@ -7,7 +7,7 @@
 
 void make_directory(const char* name) {
 #ifdef __linux__
-    mkdir(name, 777);
+    mkdir(name, 0777);
 #else
     mkdir(name);
 #endif
@@ -50,10 +50,8 @@ int main(int argc, char** argv) {
 
     for (int i = 1; i < 26; ++i) {
         snprintf(path, REL_PATH_MAX, "%s/day_%02d.c", year_str, i);
-        // printf("%s\n", path);
         FILE* c_file = fopen(path, "w");
         fprintf(c_file, template, i);
-        // fprintf(c_file, "#include <stdio.h>\n\nint main() {\n    FILE* input = fopen(\"data/day_%02d.txt\", \"r\");\n\n\n    fclose(input);\n}", i);
         fclose(c_file);
     }
 
