@@ -12,7 +12,6 @@ To use this library, do this in *one* C or C++ file:
 #include <stdlib.h>
 
 #define pq_push(pq, val) _pq_push((pq), &(val));
-#define pq_free(pq) _pq_free(&(pq));
 
 typedef int (*pq_cmpp)(const void*, const void*);
 
@@ -137,7 +136,7 @@ void pq_pop(Pq pq, void* result) {
     size_t size = da_unit_size(da);
 
     if (len == 0) {
-        pq_print_err("Pop from an empty array\n");
+        pq_print_err("Pop from an empty queue\n");
         return;
     }
     // Swap first and last element of the array
@@ -151,10 +150,9 @@ void pq_pop(Pq pq, void* result) {
     if (len > 0) pq_sift_down(pq);
 }
 
-void _pq_free(Pq *pq) {
-    da_free((*pq)->heap);
-    free(*pq);
-    *pq = NULL;
+void pq_free(Pq pq) {
+    da_free(pq->heap);
+    free(pq);
 }
 
 #endif // PQUEUE_IMPLEMENTATION

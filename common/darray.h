@@ -3,7 +3,7 @@ To use this library, do this in *one* C or C++ file:
 #define DARRAY_IMPLEMENTATION
 #include "darray.h"
 
-T* da = da_create(sizeof(T)) - Create a dynamic array
+T* da = da_create(sizeof(T)) - Create a dynamic array of type T
 da_free(da)                  - Free the entire dynamic array
 da_append(da, var)           - Append var to the dynamic array da
 da_pop(da, &var)             - Remove last element of dynamic array da and copies result to var (can be NULL)
@@ -19,6 +19,7 @@ da[i]                        - Access ith element of dynamic array da
 
 #define DARRAY_GROWTH 1.5
 #define DARRAY_INICAP 2
+
 
 enum DARRAY_HEADER {
     DARRAY_LENGTH,
