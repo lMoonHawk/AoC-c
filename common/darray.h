@@ -16,6 +16,7 @@ da[i]                        - Access ith element of dynamic array da
 #define DARRAY_H
 
 #include <stdlib.h>
+#include <sys/types.h>
 
 #define DARRAY_GROWTH 1.5
 #define DARRAY_INICAP 2
@@ -28,7 +29,9 @@ enum DARRAY_HEADER {
     DARRAY_FIELDS
 };
 
-#define da_append(da, val) _da_append((void**)&(da), &(val));
+#define da_append(da, val) _da_append((void**)&(da), &(val))
+#define da_insert(da, val, index) _da_insert((void**)&(da), &(val), index)
+#define da_indexof(da, val) _da_indexof((void*)(da), &(val))
 
 void da_print_err(const char* msg);
 void* da_create(size_t unit_size);
@@ -38,6 +41,9 @@ size_t da_unit_size(void* da);
 void da_set_length(void* da, size_t len);
 void _da_append(void** da, void* value);
 void da_pop(void* da, void* result);
+void da_remove(void* da, size_t index);
+void _da_insert(void** da, void* value, size_t index);
+ssize_t _da_indexof(void* da, void* value);
 void da_remove(void* da, size_t index);
 void da_free(void* da);
 
@@ -96,12 +102,21 @@ void _da_append(void** da, void* value) {
     da_set_length(*da, ++len);
 }
 
+void _da_insert(void** da, void* value, size_t index) {
+    size_t len = da_length(*da);
+    size_t capa = da_capacity(*da);
+    size_t size = da_unit_size(*da);
+    if (capa <= len) _da_resize(da, capa * DARRAY_GROWTH, size);
+    memmove((char*)*da + (index + 1) * size, (char*)*da + index * size, (len - index) * size);
+    memcpy((char*)*da + index * size, value, size);
+    da_set_length(*da, ++len);
+}
+
 void da_pop(void* da, void* result) {
     size_t len = da_length(da);
     if (len <= 0) {
         da_print_err("Pop from an empty array\n");
-    }
-    else {
+    } else {
         // size_t capa = da_capacity(da);
         size_t size = da_unit_size(da);
         // TODO: research optimal shrink threshold & factor and/or allow for custom setting
@@ -128,6 +143,15 @@ void da_remove(void* da, size_t index) {
 
 void da_free(void* da) {
     free((char*)da - DARRAY_FIELDS * sizeof(size_t));
+}
+
+ssize_t _da_indexof(void* da, void* value) {
+    size_t size = da_unit_size(da);
+    for (size_t i = 0; i < da_length(da); ++i) {
+        if (memcmp((char*)da + i * size, value, size) == 0)
+            return i;
+    }
+    return -1;
 }
 
 #endif // DARRAY_IMPLEMENTATION
