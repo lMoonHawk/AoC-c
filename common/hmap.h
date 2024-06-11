@@ -11,7 +11,6 @@
 #define HM_LOADFACTOR 0.75
 #define HM_STRING 0
 
-
 typedef struct {
     void* key;
     void* value;
@@ -28,9 +27,11 @@ typedef struct {
     Slot* htable;
 } Hmap;
 
-/* TODO: 
+typedef Hmap Hset;
+
+/* TODO:
 - Add set operations
-    bool hm_in(Hmap hm, void* key) (should be hm_get != NULL)
+    bool hm_in(Hmap hm, void* key) (should be hm_search != NULL)
     maybe facilitate set creation instead of having NULL values
 - More consistency on Hmap* v Hmap
 - Add an ordered iterator (3 options):
@@ -38,20 +39,28 @@ typedef struct {
     2) maintain a dynamic array of ordered slots (more costly in case of deletes but more cache friendly)
     3) create the iterator with a function, calling next will fetch next valid index (most simple and saves mem but does not allow for insertion order preservation)
 */
+
+// Hashmap functions
 Hmap* hm_create(size_t key_size, size_t value_size);
 void hm_free_slots(size_t n, Slot slots[n]);
 void hm_free(Hmap* hm);
 size_t hm_hash_string(void* key);
 size_t hm_hash_bytes(void* key, size_t size);
 void _hm_resize(Hmap* hm, size_t new_capacity);
-bool hm_set_hashed(Hmap* hm, size_t hash, void* key, void* value);
+bool hm_insert_hashed(Hmap* hm, size_t hash, void* key, void* value);
 void hm_slots_reloc(Hmap* hm, size_t nsource, Slot source[nsource]);
 Hmap* hm_copy(Hmap hm);
 int _hm_keycmp(Hmap hm, void* k1, void* k2);
-bool hm_set(Hmap* hm, void* key, void* value);
+bool hm_insert(Hmap* hm, void* key, void* value);
 bool _hm_get_index(Hmap hm, void* key, size_t* index);
-void* hm_get(Hmap hm, void* key);
-bool _hm_del(Hmap* hm, void* key);
+void* hm_search(Hmap hm, void* key);
+bool hm_remove(Hmap* hm, void* key);
+// Hashset functions (TODO: might #define instead)
+Hset* hs_create(size_t key_size);
+void hs_free(Hset* hs);
+bool hs_insert(Hset* hs, void* key);
+bool hs_remove(Hset* hs, void* key);
+bool hs_contains(Hset hs, void* key);
 
 #endif // HMAP_H
 
@@ -110,7 +119,7 @@ void _hm_resize(Hmap* hm, size_t new_capacity) {
     free(prev_htable);
 }
 
-bool hm_set_hashed(Hmap* hm, size_t hash, void* key, void* value) {
+bool hm_insert_hashed(Hmap* hm, size_t hash, void* key, void* value) {
 
     if (hm->used_cnt + hm->deleted_cnt > hm->capacity * HM_LOADFACTOR)
         _hm_resize(hm, hm->capacity * 2);
@@ -159,7 +168,7 @@ void hm_slots_reloc(Hmap* hm, size_t nsource, Slot source[nsource]) {
     // TODO: Might change if iterator LL implemented
     for (size_t i = 0; i < nsource; ++i) {
         if (source[i].key != NULL && !source[i].deleted) {
-            hm_set_hashed(hm, source[i].hash, source[i].key, source[i].value);
+            hm_insert_hashed(hm, source[i].hash, source[i].key, source[i].value);
         }
     }
 }
@@ -178,9 +187,9 @@ int _hm_keycmp(Hmap hm, void* k1, void* k2) {
     return hm.key_size == HM_STRING ? strcmp(k1, k2) : memcmp(k1, k2, hm.key_size);
 }
 
-bool hm_set(Hmap* hm, void* key, void* value) {
+bool hm_insert(Hmap* hm, void* key, void* value) {
     size_t hash = hm->key_size == HM_STRING ? hm_hash_string(key) : hm_hash_bytes(key, hm->key_size);
-    return hm_set_hashed(hm, hash, key, value);
+    return hm_insert_hashed(hm, hash, key, value);
 }
 
 bool _hm_get_index(Hmap hm, void* key, size_t* index) {
@@ -200,7 +209,7 @@ bool _hm_get_index(Hmap hm, void* key, size_t* index) {
     return false;
 }
 
-void* hm_get(Hmap hm, void* key) {
+void* hm_search(Hmap hm, void* key) {
     size_t index;
     if (_hm_get_index(hm, key, &index)) {
         return hm.htable[index].value;
@@ -217,6 +226,26 @@ bool hm_del(Hmap* hm, void* key) {
         return true;
     }
     return false;
+}
+
+Hset* hs_create(size_t key_size) {
+    return hm_create(key_size, 1);
+}
+
+void hs_free(Hset* hs) {
+    hm_free(hs);
+}
+
+bool hs_insert(Hset* hs, void* key) {
+    return hm_insert(hs, key, &(char) { 0 });
+}
+
+bool hs_remove(Hset* hs, void* key) {
+    return hm_del(hs, key);
+}
+
+bool hs_contains(Hset hs, void* key) {
+    return _hm_get_index(hs, key, &(size_t){0});
 }
 
 #endif // HMAP_IMPLEMENTATION
