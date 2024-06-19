@@ -35,6 +35,7 @@ enum DARRAY_HEADER {
 
 void da_print_err(const char* msg);
 void* da_create(size_t unit_size);
+void* da_copy(void* da);
 size_t da_length(void* da);
 size_t da_capacity(void* da);
 size_t da_unit_size(void* da);
@@ -68,6 +69,13 @@ void* da_create(size_t unit_size) {
     dah[DARRAY_CAPACITY] = DARRAY_INICAP;
     dah[DARRAY_UNIT_SIZE] = unit_size;
     // Returns adress after the header
+    return (void*)(dah + DARRAY_FIELDS);
+}
+
+void* da_copy(void* da) {
+    size_t* dah = malloc(DARRAY_FIELDS * sizeof(size_t) + da_capacity(da) * da_unit_size(da));
+    assert(dah != NULL);
+    memcpy(dah, (size_t*)da - DARRAY_FIELDS, DARRAY_FIELDS * sizeof(size_t) + da_length(da) * da_unit_size(da));
     return (void*)(dah + DARRAY_FIELDS);
 }
 
