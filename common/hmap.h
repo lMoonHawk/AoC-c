@@ -55,12 +55,14 @@ bool hm_insert(Hmap* hm, void* key, void* value);
 bool _hm_get_index(Hmap hm, void* key, size_t* index);
 void* hm_search(Hmap hm, void* key);
 bool hm_remove(Hmap* hm, void* key);
+size_t hm_length(Hmap hm);
 // Hashset functions (TODO: might #define instead)
 Hset* hs_create(size_t key_size);
 void hs_free(Hset* hs);
 bool hs_insert(Hset* hs, void* key);
 bool hs_remove(Hset* hs, void* key);
 bool hs_contains(Hset hs, void* key);
+size_t hs_length(Hset hs);
 
 #endif // HMAP_H
 
@@ -114,6 +116,7 @@ void _hm_resize(Hmap* hm, size_t new_capacity) {
     Slot* prev_htable = hm->htable;
     hm->capacity = new_capacity;
     hm->htable = calloc(new_capacity, sizeof(Slot));
+    hm->used_cnt = 0;
     hm_slots_reloc(hm, prev_capacity, prev_htable);
     hm_free_slots(prev_capacity, prev_htable);
     free(prev_htable);
@@ -217,7 +220,7 @@ void* hm_search(Hmap hm, void* key) {
     return NULL;
 }
 
-bool hm_del(Hmap* hm, void* key) {
+bool hm_remove(Hmap* hm, void* key) {
     size_t index;
     if (_hm_get_index(*hm, key, &index)) {
         hm->htable[index].deleted = true;
@@ -226,6 +229,10 @@ bool hm_del(Hmap* hm, void* key) {
         return true;
     }
     return false;
+}
+
+size_t hm_length(Hmap hm) {
+    return hm.used_cnt;
 }
 
 Hset* hs_create(size_t key_size) {
@@ -241,11 +248,15 @@ bool hs_insert(Hset* hs, void* key) {
 }
 
 bool hs_remove(Hset* hs, void* key) {
-    return hm_del(hs, key);
+    return hm_remove(hs, key);
 }
 
 bool hs_contains(Hset hs, void* key) {
     return _hm_get_index(hs, key, &(size_t){0});
+}
+
+size_t hs_length(Hset hs) {
+    return hs.used_cnt;
 }
 
 #endif // HMAP_IMPLEMENTATION
