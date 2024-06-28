@@ -18,18 +18,18 @@ typedef int (*pq_cmpp)(const void*, const void*);
 typedef struct _Pq {
     void* heap;
     pq_cmpp cmpf;
-} *Pq;
+} *Pqueue;
 
 void pq_print_err(const char* msg);
 void* pq_create(size_t unit_size, pq_cmpp cmpf);
-size_t pq_length(Pq pq);
-void pq_sift_up(Pq pq, size_t pos);
-void _pq_push(Pq pq, void* value);
-void pq_sift_down(Pq pq);
-void* pq_peekcpy(Pq pq, void* result);
-const void* pq_peek(Pq pq);
-void pq_pop(Pq pq, void* result);
-void _pq_free(Pq *pq);
+size_t pq_length(Pqueue pq);
+void pq_sift_up(Pqueue pq, size_t pos);
+void _pq_push(Pqueue pq, void* value);
+void pq_sift_down(Pqueue pq);
+void* pq_peekcpy(Pqueue pq, void* result);
+const void* pq_peek(Pqueue pq);
+void pq_pop(Pqueue pq, void* result);
+void _pq_free(Pqueue *pq);
 
 #endif // PQUEUE_H
 
@@ -45,17 +45,17 @@ void pq_print_err(const char* msg) {
 }
 
 void* pq_create(size_t unit_size, pq_cmpp cmpf) {
-    Pq pq = malloc(sizeof(struct _Pq));
+    Pqueue pq = malloc(sizeof(struct _Pq));
     assert(pq != NULL);
     *pq = (struct _Pq){ da_create(unit_size), cmpf };
     return pq;
 }
 
-size_t pq_length(Pq pq) {
+size_t pq_length(Pqueue pq) {
     return da_length(pq->heap);
 }
 
-void pq_sift_up(Pq pq, size_t pos) {
+void pq_sift_up(Pqueue pq, size_t pos) {
     void* da = pq->heap;
     pq_cmpp cmpf = pq->cmpf;
     size_t size = da_unit_size(da);
@@ -81,13 +81,13 @@ void pq_sift_up(Pq pq, size_t pos) {
     return;
 }
 
-void _pq_push(Pq pq, void* value) {
+void _pq_push(Pqueue pq, void* value) {
     _da_append(&(pq->heap), value);
     size_t len = da_length(pq->heap);
     pq_sift_up(pq, len - 1);
 }
 
-void pq_sift_down(Pq pq) {
+void pq_sift_down(Pqueue pq) {
     void* da = pq->heap;
     size_t size = da_unit_size(da);
     size_t len = da_length(da);
@@ -120,17 +120,17 @@ void pq_sift_down(Pq pq) {
     pq_sift_up(pq, pos);
 }
 
-void* pq_peekcpy(Pq pq, void* result) {
+void* pq_peekcpy(Pqueue pq, void* result) {
     if (result == NULL) return NULL;
     void* da = pq->heap;
     return memcpy(result, (char*)da, da_unit_size(da));
 }
 
-const void* pq_peek(Pq pq) {
+const void* pq_peek(Pqueue pq) {
     return pq->heap;
 }
 
-void pq_pop(Pq pq, void* result) {
+void pq_pop(Pqueue pq, void* result) {
     void* da = pq->heap;
     size_t len = da_length(da);
     size_t size = da_unit_size(da);
@@ -150,7 +150,7 @@ void pq_pop(Pq pq, void* result) {
     if (len > 0) pq_sift_down(pq);
 }
 
-void pq_free(Pq pq) {
+void pq_free(Pqueue pq) {
     da_free(pq->heap);
     free(pq);
 }
