@@ -47,11 +47,11 @@ void hm_free(Hmap* hm);
 size_t hm_hash_string(void* key);
 size_t hm_hash_bytes(void* key, size_t size);
 void _hm_resize(Hmap* hm, size_t new_capacity);
-bool hm_insert_hashed(Hmap* hm, size_t hash, void* key, void* value);
+void* hm_insert_hashed(Hmap* hm, size_t hash, void* key, void* value);
 void hm_slots_reloc(Hmap* hm, size_t nsource, Slot source[nsource]);
 Hmap* hm_copy(Hmap hm);
 int _hm_keycmp(Hmap hm, void* k1, void* k2);
-bool hm_insert(Hmap* hm, void* key, void* value);
+void* hm_insert(Hmap* hm, void* key, void* value);
 bool _hm_get_index(Hmap hm, void* key, size_t* index);
 void* hm_search(Hmap hm, void* key);
 bool hm_remove(Hmap* hm, void* key);
@@ -59,7 +59,7 @@ size_t hm_length(Hmap hm);
 // Hashset functions (TODO: might #define instead)
 Hset* hs_create(size_t key_size);
 void hs_free(Hset* hs);
-bool hs_insert(Hset* hs, void* key);
+void* hs_insert(Hset* hs, void* key);
 bool hs_remove(Hset* hs, void* key);
 bool hs_contains(Hset hs, void* key);
 size_t hs_length(Hset hs);
@@ -122,8 +122,7 @@ void _hm_resize(Hmap* hm, size_t new_capacity) {
     free(prev_htable);
 }
 
-bool hm_insert_hashed(Hmap* hm, size_t hash, void* key, void* value) {
-
+void* hm_insert_hashed(Hmap* hm, size_t hash, void* key, void* value) {
     if (hm->used_cnt + hm->deleted_cnt > hm->capacity * HM_LOADFACTOR)
         _hm_resize(hm, hm->capacity * 2);
     if (hm->deleted_cnt > 0 && hm->used_cnt + hm->deleted_cnt < hm->capacity * (1 - HM_LOADFACTOR))
@@ -164,7 +163,7 @@ bool hm_insert_hashed(Hmap* hm, size_t hash, void* key, void* value) {
             memcpy(hm->htable[index].key, key, hm->key_size);
         }
     }
-    return !replace;
+    return hm->htable[index].value;
 }
 
 void hm_slots_reloc(Hmap* hm, size_t nsource, Slot source[nsource]) {
@@ -190,7 +189,8 @@ int _hm_keycmp(Hmap hm, void* k1, void* k2) {
     return hm.key_size == HM_STRING ? strcmp(k1, k2) : memcmp(k1, k2, hm.key_size);
 }
 
-bool hm_insert(Hmap* hm, void* key, void* value) {
+
+void* hm_insert(Hmap* hm, void* key, void* value) {
     size_t hash = hm->key_size == HM_STRING ? hm_hash_string(key) : hm_hash_bytes(key, hm->key_size);
     return hm_insert_hashed(hm, hash, key, value);
 }
@@ -243,7 +243,7 @@ void hs_free(Hset* hs) {
     hm_free(hs);
 }
 
-bool hs_insert(Hset* hs, void* key) {
+void* hs_insert(Hset* hs, void* key) {
     return hm_insert(hs, key, &(char) { 0 });
 }
 
