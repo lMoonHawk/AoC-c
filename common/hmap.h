@@ -55,6 +55,7 @@ void* hm_insert(Hmap* hm, void* key, void* value);
 bool _hm_get_index(Hmap hm, void* key, size_t* index);
 void* hm_search(Hmap hm, void* key);
 bool hm_remove(Hmap* hm, void* key);
+bool hm_contains(Hset hs, void* key);
 size_t hm_length(Hmap hm);
 // Hashset functions (TODO: might #define instead)
 Hset* hs_create(size_t key_size);
@@ -117,6 +118,7 @@ void _hm_resize(Hmap* hm, size_t new_capacity) {
     hm->capacity = new_capacity;
     hm->htable = calloc(new_capacity, sizeof(Slot));
     hm->used_cnt = 0;
+    hm->deleted_cnt = 0;
     hm_slots_reloc(hm, prev_capacity, prev_htable);
     hm_free_slots(prev_capacity, prev_htable);
     free(prev_htable);
@@ -133,16 +135,19 @@ void* hm_insert_hashed(Hmap* hm, size_t hash, void* key, void* value) {
     bool replace = false;
     while (slot.key != NULL || slot.deleted) {
         if (hash == slot.hash && _hm_keycmp(*hm, key, slot.key) == 0) {
-            replace = true;
+            replace = !slot.deleted;
             break;
         }
         index = (index + 1) % hm->capacity;
         slot = hm->htable[index];
     }
 
-    if (slot.deleted)
+    if (slot.deleted) {
         --hm->deleted_cnt;
-
+        free(slot.key);
+        free(slot.value);
+        hm->htable[index].deleted = false;
+    }
     // Value
     if (hm->value_size == HM_STRING) {
         free(hm->htable[index].value);
@@ -229,6 +234,10 @@ bool hm_remove(Hmap* hm, void* key) {
         return true;
     }
     return false;
+}
+
+bool hm_contains(Hset hs, void* key) {
+    return _hm_get_index(hs, key, &(size_t){0});
 }
 
 size_t hm_length(Hmap hm) {
