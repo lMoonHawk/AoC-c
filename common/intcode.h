@@ -19,6 +19,7 @@ typedef enum {
 } Opcode;
 
 typedef enum {
+    IC_RUNNING,
     IC_HALT,
     IC_EMPTY_INPUT,
     IC_SINGLE_OUTPUT,
@@ -41,8 +42,10 @@ typedef struct {
 int64_t* ic_parse(FILE* input);
 IC_state* ic_create(int64_t* program);
 void ic_free(IC_state* state);
-void ic_push_input(IC_state* state, int64_t value);
-int64_t ic_pop_output(IC_state* state);
+void ic_input_push(IC_state* state, int64_t value);
+size_t ic_output_length(IC_state* state);
+int64_t ic_output_pop(IC_state* state);
+void ic_override(IC_state* state, size_t addr, int64_t value);
 void get_parameters(int64_t parameters[3], int count, int modes, bool writes, IC_state* state);
 void _ic_write(IC_state* state, size_t addr, int64_t value);
 int64_t _ic_get(IC_state* state, size_t addr);
@@ -91,15 +94,24 @@ void ic_free(IC_state* state) {
     free(state);
 }
 
-void ic_push_input(IC_state* state, int64_t value) {
+void ic_input_push(IC_state* state, int64_t value) {
     q_push(state->input, value);
 }
 
-int64_t ic_pop_output(IC_state* state) {
+size_t ic_output_length(IC_state* state) {
+    return q_length(state->output);
+}
+
+int64_t ic_output_pop(IC_state* state) {
     int64_t output;
     q_pop(state->output, &output);
     return output;
 }
+
+void ic_override(IC_state* state, size_t addr, int64_t value) {
+    state->program[addr] = value;
+}
+
 
 void _ic_write(IC_state* state, size_t addr, int64_t value) {
     if (addr >= da_length(state->program)) {
