@@ -41,6 +41,7 @@ typedef struct {
 
 int64_t* ic_parse(FILE* input);
 IC_state* ic_create(int64_t* program);
+IC_state* ic_copy(IC_state* state);
 void ic_free(IC_state* state);
 void ic_input_push(IC_state* state, int64_t value);
 size_t ic_output_length(IC_state* state);
@@ -85,6 +86,16 @@ IC_state* ic_create(int64_t* program) {
     state->input = q_create(sizeof(int64_t));
     state->output = q_create(sizeof(int64_t));
     return state;
+}
+
+IC_state* ic_copy(IC_state* state) {
+    IC_state* copy = malloc(sizeof(*state));
+    copy->program = da_copy(state->program);
+    copy->ip = state->ip;
+    copy->base = state->base;
+    copy->input = q_copy(state->input);
+    copy->output = q_copy(state->output);
+    return copy;
 }
 
 void ic_free(IC_state* state) {

@@ -12,7 +12,7 @@ To use this library, do this in *one* C or C++ file:
 #include <stdlib.h>
 
 typedef struct _Queue {
-    void *arr;
+    void* arr;
     size_t head;
     size_t tail;
 } *Queue;
@@ -21,6 +21,7 @@ typedef struct _Queue {
 
 void q_print_err(const char* msg);
 void* q_create(size_t unit_size);
+Queue q_copy(Queue q);
 size_t q_length(Queue q);
 void _q_resize(Queue q, size_t new_capa);
 void _q_push(Queue q, void* value);
@@ -49,6 +50,14 @@ void* q_create(size_t unit_size) {
     return q;
 }
 
+Queue q_copy(Queue q) {
+    Queue copy = malloc(sizeof(struct _Queue));
+    copy->arr = da_copy(q->arr);
+    copy->head = q->head;
+    copy->tail = q->tail;
+    return copy;
+}
+
 size_t q_length(Queue q) {
     return da_length(q->arr);
 }
@@ -61,13 +70,12 @@ void _q_resize(Queue q, size_t new_capa) {
     size_t len = da_length(q->arr);
     size_t size = da_unit_size(q->arr);
     size_t after_head = len - q->head;
-    
+
     _da_resize(&(q->arr), new_capa, size);
 
     if (q->tail == 0) {
         q->tail = after_head;
-    }
-    else {
+    } else {
         char* head_p = (char*)q->arr + q->head * size;
         char* new_head_p = (char*)q->arr + (new_capa - after_head) * size;
         memmove(new_head_p, head_p, after_head * size);
@@ -84,7 +92,7 @@ void _q_push(Queue q, void* value) {
         capa *= DARRAY_GROWTH;
         _q_resize(q, capa);
     }
-    
+
     memcpy((char*)q->arr + q->tail * size, value, size);
     da_set_length(q->arr, len + 1);
     q->tail++;
@@ -101,9 +109,9 @@ void q_pop(Queue q, void* result) {
         q_print_err("Pop from an empty queue\n");
         return;
     }
-    char * head = (char*)q->arr + size * q->head;
+    char* head = (char*)q->arr + size * q->head;
     if (result != NULL) memcpy(result, head, size);
-    
+
     da_set_length(da, --len);
     q->head++;
     if (q->head == capa) q->head = 0;
