@@ -123,10 +123,9 @@ void ic_override(IC_state* state, size_t addr, int64_t value) {
     state->program[addr] = value;
 }
 
-
 void _ic_write(IC_state* state, size_t addr, int64_t value) {
     if (addr >= da_length(state->program)) {
-        for (size_t i = da_length(state->program); i <= addr; ++i) {
+        for (size_t i = da_length(state->program); i <= addr + 1; ++i) {
             da_append(state->program, (int64_t) { 0 });
         }
     }
@@ -174,10 +173,13 @@ IC_stop ic_interpret(IC_state* state) {
                 break;
             case INPUT:
                 get_parameters(parameters, 1, modes, true, state);
-                if (q_length(state->input))
-                    q_pop(state->input, &state->program[parameters[0]]);
-                else
+                if (q_length(state->input)) {
+                    int64_t input;
+                    q_pop(state->input, &input);
+                    _ic_write(state, parameters[0], input);
+                } else {
                     return IC_EMPTY_INPUT;
+                }
                 state->ip += 2;
                 break;
             case OUTPUT:
