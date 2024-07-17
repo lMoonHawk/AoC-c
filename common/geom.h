@@ -24,10 +24,18 @@ int abs(int i);
 int p2dist(Point2 p1, Point2 p2);
 int p3dist(Point3 p1, Point3 p2);
 bool p2in_bounds(Point2 v, P2Bounds b);
+void p2bounds_update(P2Bounds* b, Point2 p);
 
 #endif // GEOM_H
 
 #ifdef GEOM_IMPLEMENTATION
+
+Point2 p2adjacents[4] = {
+    {.x = 0, .y = -1},
+    {.x = 1, .y = 0},
+    {.x = 0, .y = 1},
+    {.x = -1, .y = 0}
+};
 
 Point2 p2add(Point2 p1, Point2 p2) {
     return (Point2) { .x = p1.x + p2.x, .y = p1.y + p2.y };
@@ -55,6 +63,13 @@ Point3 p3scale(Point3 v, int s) {
 
 bool p2in_bounds(Point2 v, P2Bounds b) {
     return (v.x >= b.min.x && v.y >= b.min.y && v.x <= b.max.x && v.y <= b.max.y);
+}
+
+void p2bounds_update(P2Bounds* b, Point2 p) {
+    if (b->min.x > p.x) b->min.x = p.x;
+    if (b->min.y > p.y) b->min.y = p.y;
+    if (b->max.x < p.x) b->max.x = p.x;
+    if (b->max.y < p.y) b->max.y = p.y;
 }
 
 int abs(int i) {
