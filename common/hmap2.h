@@ -66,7 +66,8 @@ size_t hm_length(Hmap hm);
 Hset* hs_create(size_t key_size);
 void hs_free(Hset* hs);
 Hset_iter hs_iter(Hset* hs);
-bool hs_iter_next(Hset_iter* iter, void** key);
+bool hs_iter_next(Hset_iter* iter, void* key);
+Hset* hs_copy(Hset hs);
 void* hs_insert(Hset* hs, void* key);
 bool hs_remove(Hset* hs, void* key);
 bool hs_contains(Hset hs, void* key);
@@ -122,14 +123,16 @@ bool hm_iter_next(Hmap_iter* iter, void* key, void* value) {
     return true;
 }
 
-bool hs_iter_next(Hset_iter* iter, void** key) {
+bool hs_iter_next(Hset_iter* iter, void* key) {
     return hm_iter_next(iter, key, NULL);
 }
 
-void hm_slots_free(size_t n, Slot slots[n]) { 
+void hm_slots_free(size_t n, Slot slots[n]) {
     for (size_t i = 0; i < n; ++i) {
-        free(slots[i].key);
-        free(slots[i].value);
+        if (!slots[i].deleted) {
+            free(slots[i].key);
+            free(slots[i].value);
+        }
     }
 }
 
@@ -329,6 +332,10 @@ bool hs_contains(Hset hs, void* key) {
 
 size_t hs_length(Hset hs) {
     return hs.used_cnt;
+}
+
+Hset* hs_copy(Hset hs) {
+    return hm_copy(hs);
 }
 
 #endif // HMAP_IMPLEMENTATION
