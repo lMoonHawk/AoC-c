@@ -30,6 +30,7 @@ enum DARRAY_HEADER {
 };
 
 #define da_append(da, val) _da_append((void**)&(da), &(val))
+#define da_extend(da, val, n) _da_extend((void**)&(da), (val), (n))
 #define da_insert(da, val, index) _da_insert((void**)&(da), &(val), index)
 #define da_indexof(da, val) _da_indexof((void*)(da), &(val))
 
@@ -41,11 +42,11 @@ size_t da_capacity(void* da);
 size_t da_unit_size(void* da);
 void da_set_length(void* da, size_t len);
 void _da_append(void** da, void* value);
+void _da_extend(void** da, void* arr, size_t size);
 void da_pop(void* da, void* result);
 void da_remove(void* da, size_t index);
 void _da_insert(void** da, void* value, size_t index);
 ssize_t _da_indexof(void* da, void* value);
-void da_remove(void* da, size_t index);
 void da_free(void* da);
 
 #endif // DARRAY_H
@@ -108,6 +109,11 @@ void _da_append(void** da, void* value) {
 
     memcpy((char*)*da + len * size, value, size);
     da_set_length(*da, ++len);
+}
+
+void _da_extend(void** da, void* arr, size_t size) {
+    for (size_t i = 0; i < size; ++i)
+        _da_append(da, (char*)arr + i * da_unit_size(*da));
 }
 
 void _da_insert(void** da, void* value, size_t index) {
