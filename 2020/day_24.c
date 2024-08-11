@@ -118,12 +118,13 @@ int main() {
         hm_free(tmp);
     }
     da_free(to_check);
-    hm_free(tiles);
 
     int count = 0;
     iter_tiles = hm_iter(tiles);
     while (hm_iter_next(&iter_tiles, &tile, &color))
         count += color;
+        
+    hm_free(tiles);
 
     printf("Part 1: %d\n", count_init);
     printf("Part 2: %d\n", count);
