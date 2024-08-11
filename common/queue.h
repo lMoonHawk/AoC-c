@@ -10,6 +10,7 @@ To use this library, do this in *one* C or C++ file:
 #define QUEUE_H
 
 #include <stdlib.h>
+#include <stdbool.h>
 
 typedef struct _Queue {
     void* arr;
@@ -22,10 +23,11 @@ typedef struct _Queue {
 void q_print_err(const char* msg);
 void* q_create(size_t unit_size);
 Queue q_copy(Queue q);
+Queue q_slice(Queue q, int start, int end);
 size_t q_length(Queue q);
 void _q_resize(Queue q, size_t new_capa);
 void _q_push(Queue q, void* value);
-void q_pop(Queue q, void* result);
+bool q_pop(Queue q, void* result);
 void* q_peekcpy(Queue q, void* result);
 const void* q_peek(Queue q);
 void q_print(Queue q, size_t cnt, void (*q_print_item)(void*));
@@ -99,22 +101,21 @@ void _q_push(Queue q, void* value) {
     if (q->tail == capa) q->tail = 0;
 }
 
-void q_pop(Queue q, void* result) {
+bool q_pop(Queue q, void* result) {
     void* da = q->arr;
     size_t len = da_length(da);
     size_t size = da_unit_size(da);
     size_t capa = da_capacity(q->arr);
 
-    if (len == 0) {
-        q_print_err("Pop from an empty queue\n");
-        return;
-    }
+    if (len == 0)
+        return false;
     char* head = (char*)q->arr + size * q->head;
     if (result != NULL) memcpy(result, head, size);
 
     da_set_length(da, --len);
     q->head++;
     if (q->head == capa) q->head = 0;
+    return true;
 }
 
 void* q_peekcpy(Queue q, void* result) {
@@ -125,6 +126,22 @@ void* q_peekcpy(Queue q, void* result) {
 
 const void* q_peek(Queue q) {
     return (char*)q->arr + q->head * da_unit_size(q->arr);
+}
+
+Queue q_slice(Queue q, int start, int end) {
+    int capa = da_capacity(q->arr);
+    int el_size = da_unit_size(q->arr);
+    Queue res = q_create(el_size);
+
+    int index = q->head;
+    for (int i = 0; i < start; ++i)
+        index = (index + 1) % capa;
+    for (int i = start; i < end; ++i) {
+        char* ptr = (char*)(q->arr) + index * el_size;
+        _q_push(res, ptr);
+        index = (index + 1) % capa;
+    }
+    return res;
 }
 
 void q_print(Queue q, size_t cnt, void (*q_print_item)(void*)) {
